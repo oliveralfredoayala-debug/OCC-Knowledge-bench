@@ -1508,10 +1508,11 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
       t => {
         setExtractLoad(false);
         try {
-          const startIdx = t.indexOf("[");
-          const endIdx = t.lastIndexOf("]");
-          if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", JSON.stringify(t.slice(0,50))); return; }
-          const jsonStr = t.slice(startIdx, endIdx + 1);
+          const clean = t.replace(/^\uFEFF/, "").replace(/[\u200B-\u200D\uFEFF]/g, "");
+          const startIdx = clean.indexOf("[");
+          const endIdx = clean.lastIndexOf("]");
+          if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", JSON.stringify(clean.slice(0,80))); return; }
+          const jsonStr = clean.slice(startIdx, endIdx + 1);
           const a = JSON.parse(jsonStr);
           if (Array.isArray(a) && a.length) upd({ steps: a.map((s, i) => ({ id: Date.now() + i, text: s.text || "", image: null, imageBase: null, imageShapes: [], imageAlt: s.imageAlt || "" })) });
         } catch(e) { console.error("Extract parse error:", e); }
