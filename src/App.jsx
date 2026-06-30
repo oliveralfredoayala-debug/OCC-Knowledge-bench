@@ -1325,7 +1325,7 @@ function StepCard({ step, index, total, onUpd, onDelete, onMoveUp, onMoveDown, d
 5. No notes, warnings, or caveats — those belong in SOPs not KB articles
 6. Output ONLY the rewritten step text — no labels, no preamble, nothing else
 
-Step to rewrite: "${step.text}"`,
+Step to rewrite: "${step.text.replace(/\*\*/g, '')}"`,
       t => onUpd({ text: t }),
       t => { onUpd({ text: t }); setAiLoad(false); },
       () => setAiLoad(false)
@@ -1508,11 +1508,10 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
       t => {
         setExtractLoad(false);
         try {
-          const cleaned = t.replace(/```json/g, "").replace(/```/g, "").replace(/^\s+/, "").trim();
-          const startIdx = cleaned.search(/\[/);
-          const endIdx = cleaned.lastIndexOf("]");
-          if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", cleaned); return; }
-          const jsonStr = cleaned.slice(startIdx, endIdx + 1);
+          const startIdx = t.indexOf("[");
+          const endIdx = t.lastIndexOf("]");
+          if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", JSON.stringify(t.slice(0,50))); return; }
+          const jsonStr = t.slice(startIdx, endIdx + 1);
           const a = JSON.parse(jsonStr);
           if (Array.isArray(a) && a.length) upd({ steps: a.map((s, i) => ({ id: Date.now() + i, text: s.text || "", image: null, imageBase: null, imageShapes: [], imageAlt: s.imageAlt || "" })) });
         } catch(e) { console.error("Extract parse error:", e); }
