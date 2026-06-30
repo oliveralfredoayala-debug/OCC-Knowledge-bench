@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 const NAVY="#1B2A4A",GOLD="#F5A623",WHITE="#fff",LIGHT="#FFF9EE",MUTED="#6b7280",LINE="#e5e7eb",RED="#dc2626",GREEN="#16a34a",DG="linear-gradient(135deg,#1B2A4A,#243B67)",AG="linear-gradient(135deg,#F5A623,#F7BC55)";
 const PASS="occ";
@@ -35,9 +35,9 @@ const fd = () => ({
 // ── AI CALL ──
 async function callAI(prompt, onChunk, onDone, onErr) {
   try {
-    const r = await fetch("/api/generate", {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2000, messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2000, stream: true, messages: [{ role: "user", content: prompt }] })
     });
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || `Error ${r.status}`); }
     const reader = r.body.getReader(); const dec = new TextDecoder(); let out = "";
@@ -1508,9 +1508,14 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
       t => {
         setExtractLoad(false);
         try {
-          const a = JSON.parse(t.replace(/```json/g, "").replace(/```/g, "").trim());
+          const cleaned = t.replace(/```json/g, "").replace(/```/g, "").trim();
+          const startIdx = cleaned.indexOf("[");
+          const endIdx = cleaned.lastIndexOf("]");
+          if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", cleaned); return; }
+          const jsonStr = cleaned.slice(startIdx, endIdx + 1);
+          const a = JSON.parse(jsonStr);
           if (Array.isArray(a) && a.length) upd({ steps: a.map((s, i) => ({ id: Date.now() + i, text: s.text || "", image: null, imageBase: null, imageShapes: [], imageAlt: s.imageAlt || "" })) });
-        } catch {}
+        } catch(e) { console.error("Extract parse error:", e); }
       },
       () => setExtractLoad(false)
     );
@@ -1948,4 +1953,3 @@ export default function App() {
     </div>
   );
 }
-
