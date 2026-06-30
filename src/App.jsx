@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 
 const NAVY="#1B2A4A",GOLD="#F5A623",WHITE="#fff",LIGHT="#FFF9EE",MUTED="#6b7280",LINE="#e5e7eb",RED="#dc2626",GREEN="#16a34a",DG="linear-gradient(135deg,#1B2A4A,#243B67)",AG="linear-gradient(135deg,#F5A623,#F7BC55)";
 const PASS="occ";
@@ -1948,3 +1948,4 @@ export default function App() {
     </div>
   );
 }
+
