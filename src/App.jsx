@@ -37,7 +37,7 @@ async function callAI(prompt, onChunk, onDone, onErr) {
   try {
     const r = await fetch("/api/generate", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2000, stream: true, messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, stream: true, messages: [{ role: "user", content: prompt }] })
     });
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || `Error ${r.status}`); }
     const reader = r.body.getReader(); const dec = new TextDecoder(); let out = "";
@@ -1515,10 +1515,18 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
         setExtractLoad(false);
         try {
           const clean = t.replace(/^\uFEFF/, "").replace(/[\u200B-\u200D\uFEFF]/g, "");
-          const startIdx = clean.indexOf("[");
-          const endIdx = clean.lastIndexOf("]");
-          if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", JSON.stringify(clean.slice(0,80))); return; }
-          let jsonStr = clean.slice(startIdx, endIdx + 1);
+          let startIdx = clean.indexOf("[");
+          let endIdx = clean.lastIndexOf("]");
+          let jsonStr;
+          if (startIdx === -1 || endIdx === -1) {
+            // Response may be missing the array brackets — try wrapping it
+            const objStart = clean.indexOf("{");
+            const objEnd = clean.lastIndexOf("}");
+            if (objStart === -1 || objEnd === -1) { console.error("No JSON found in response:", JSON.stringify(clean.slice(0,150))); return; }
+            jsonStr = "[" + clean.slice(objStart, objEnd + 1) + "]";
+          } else {
+            jsonStr = clean.slice(startIdx, endIdx + 1);
+          }
           let a;
           try {
             a = JSON.parse(jsonStr);
