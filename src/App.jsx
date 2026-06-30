@@ -35,7 +35,7 @@ const fd = () => ({
 // ── AI CALL ──
 async function callAI(prompt, onChunk, onDone, onErr) {
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch("/api/generate", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 2000, stream: true, messages: [{ role: "user", content: prompt }] })
     });
