@@ -33,11 +33,11 @@ const fd = () => ({
 });
 
 // ── AI CALL ──
-async function callAI(prompt, onChunk, onDone, onErr) {
+async function callAI(prompt, onChunk, onDone, onErr, maxTokens = 4000) {
   try {
     const r = await fetch("/api/generate", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 4000, stream: true, messages: [{ role: "user", content: prompt }] })
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: maxTokens, stream: true, messages: [{ role: "user", content: prompt }] })
     });
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e?.error?.message || `Error ${r.status}`); }
     const reader = r.body.getReader(); const dec = new TextDecoder(); let out = "";
@@ -1537,7 +1537,8 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
           if (Array.isArray(a) && a.length) upd({ steps: a.map((s, i) => ({ id: Date.now() + i, text: s.text || "", image: null, imageBase: null, imageShapes: [], imageAlt: s.imageAlt || "" })) });
         } catch(e) { console.error("Extract parse error:", e); }
       },
-      () => setExtractLoad(false)
+      () => setExtractLoad(false),
+      8000
     );
   };
 
