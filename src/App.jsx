@@ -1496,7 +1496,13 @@ Rules for "text":
 - No filler like "In this step" or "You will now" — start with the action
 - No Scribe branding, nav text, watermarks, or generic headers
 
-Rules for "imageAlt": brief description of what the screenshot shows, or empty string if none.
+Rules for "imageAlt": brief description of what the screenshot shows, or empty string if none. Keep it short — under 10 words. Do not include URLs or long text in imageAlt.
+
+CRITICAL JSON FORMATTING:
+- Output must be syntactically valid JSON
+- Properly escape any double quotes inside text values using backslash
+- Do not include raw URLs longer than 60 characters in any field — truncate or omit them
+- Do not include literal newlines inside string values
 
 Strip all Scribe branding, nav, headers, footers from the content.
 
@@ -1512,8 +1518,14 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
           const startIdx = clean.indexOf("[");
           const endIdx = clean.lastIndexOf("]");
           if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", JSON.stringify(clean.slice(0,80))); return; }
-          const jsonStr = clean.slice(startIdx, endIdx + 1);
-          const a = JSON.parse(jsonStr);
+          let jsonStr = clean.slice(startIdx, endIdx + 1);
+          let a;
+          try {
+            a = JSON.parse(jsonStr);
+          } catch (parseErr) {
+            console.error("JSON parse failed:", parseErr.message, "\nFull text:", jsonStr);
+            return;
+          }
           if (Array.isArray(a) && a.length) upd({ steps: a.map((s, i) => ({ id: Date.now() + i, text: s.text || "", image: null, imageBase: null, imageShapes: [], imageAlt: s.imageAlt || "" })) });
         } catch(e) { console.error("Extract parse error:", e); }
       },
