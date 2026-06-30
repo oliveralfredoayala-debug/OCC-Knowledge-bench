@@ -1508,8 +1508,8 @@ Return ONLY a valid JSON array, no preamble, no markdown fences.`,
       t => {
         setExtractLoad(false);
         try {
-          const cleaned = t.replace(/```json/g, "").replace(/```/g, "").trim();
-          const startIdx = cleaned.indexOf("[");
+          const cleaned = t.replace(/```json/g, "").replace(/```/g, "").replace(/^\s+/, "").trim();
+          const startIdx = cleaned.search(/\[/);
           const endIdx = cleaned.lastIndexOf("]");
           if (startIdx === -1 || endIdx === -1) { console.error("No JSON array found in response:", cleaned); return; }
           const jsonStr = cleaned.slice(startIdx, endIdx + 1);
